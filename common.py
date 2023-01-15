@@ -1,5 +1,6 @@
-from collections import deque
+from collections import deque, defaultdict
 from heapq import heappush, heappop
+from math import inf
 
 def each_do(fn, iterable):
     """Call a function on each item of an iterable.  Inspired by Ruby."""
@@ -147,6 +148,34 @@ def a_star(start_node, goal_node, visit_fn):
                 previous[n] = (node, g)
                 heappush(frontier, (g+h, serial_num(), n))
     return None
+
+def fw(graph, undirected=False):
+    """Floyd-Warshall algorithm to find the lengths of the shortest
+    paths between all nodes in a graph.  The graph should be supplied
+    as a dictionary of nodes and edges of the form
+
+        {node: [(node, distance), ...]}
+
+    Nodes can be any hashable and equality-testable quantity.  If
+    `undirected` is True, distances are interpreted as being symmetric
+    and edges need be represented only once.  The return is a
+    dictionary of path lengths indexed by all possible tuples
+    (node1, node2).  Unconnected nodes have distance `math.inf`.
+    """
+    d = defaultdict(lambda: inf)
+    for node, edges in graph.items():
+        d[(node, node)] = 0
+        for n, dist in edges:
+            d[(node, n)] = dist
+            if undirected:
+                d[(n, node)] = dist
+    nodes = list(graph.keys())
+    for k in nodes:
+        for i in nodes:
+            for j in nodes:
+                if d[(i, j)] > d[(i, k)] + d[(k, j)]:
+                    d[(i, j)] = d[(i, k)] + d[(k, j)]
+    return d
 
 def neighbors4(*args):
     """Return a grid cell's 4 (up/down/left/right) neighbors.
